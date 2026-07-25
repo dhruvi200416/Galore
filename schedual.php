@@ -1,3 +1,59 @@
+<?php
+session_start();
+// Error reporting disabled to prevent warnings from displaying
+error_reporting(0);
+ini_set('display_errors', 0);
+
+// Initialize variables
+$hero_data = [
+    'hero_title' => 'Galore 2026 Schedule',
+    'hero_subtitle' => 'Check out the day-wise exciting events planned for the festival!'
+];
+$schedule_by_day = [];
+$conn = null;
+
+// Database connection
+$conn = @mysqli_connect("localhost", "root", "", "galore2026");
+
+// Check connection silently
+if ($conn) {
+    // Set charset
+    @mysqli_set_charset($conn, "utf8mb4");
+    
+    // Fetch hero section data
+    $hero_query = "SELECT * FROM schedule_page WHERE status = 'Active' LIMIT 1";
+    $hero_result = @mysqli_query($conn, $hero_query);
+    
+    // Check if query was successful and fetch data
+    if ($hero_result && @mysqli_num_rows($hero_result) > 0) {
+        $fetched_data = @mysqli_fetch_assoc($hero_result);
+        if ($fetched_data) {
+            $hero_data = array_merge($hero_data, $fetched_data);
+        }
+    }
+    
+    // Fetch schedule events
+    $events_query = "SELECT * FROM schedule_events WHERE status = 'Active' ORDER BY 
+                     FIELD(day_title, 'Day 1 - 10th Jan 2026', 'Day 2 - 11th Jan 2026', 'Day 3 - 12th Jan 2026'), 
+                     event_time ASC";
+    $events_result = @mysqli_query($conn, $events_query);
+    
+    // Group events by day if query was successful
+    if ($events_result) {
+        while ($event = @mysqli_fetch_assoc($events_result)) {
+            if ($event && isset($event['day_title'])) {
+                $schedule_by_day[$event['day_title']][] = $event;
+            }
+        }
+    }
+}
+
+// Function to safely get array value with default
+function safeGet($array, $key, $default = '') {
+    return isset($array[$key]) ? htmlspecialchars($array[$key]) : htmlspecialchars($default);
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -11,6 +67,9 @@
 
     <!-- AOS CSS -->
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
         :root {
@@ -28,7 +87,7 @@
             scroll-behavior: smooth;
         }
 
-        /* ===== HERO (SAME AS RULES PAGE) ===== */
+        /* ===== HERO SECTION ===== */
         .hero {
             background: linear-gradient(135deg, #dc3545, #7a1c25);
             color: #fff;
@@ -61,6 +120,19 @@
             opacity: 0.95;
         }
 
+        @media (max-width: 768px) {
+            .hero {
+                padding: 100px 20px 80px;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+        }
 
         /* SCHEDULE CARDS */
         .schedule-section {
@@ -119,11 +191,18 @@
         .event-time {
             font-weight: 600;
             color: var(--galore-red-dark);
+            min-width: 100px;
+        }
+
+        .event-details {
+            flex: 1;
+            padding: 0 15px;
         }
 
         .event-name {
             font-weight: 500;
             color: #333;
+            margin-bottom: 4px;
         }
 
         .event-location {
@@ -131,15 +210,33 @@
             color: var(--galore-gray);
         }
 
-        /* RESPONSIVE */
-        @media(max-width:768px) {
+        .no-events {
+            text-align: center;
+            padding: 60px 20px;
+            background: #f8f9fa;
+            border-radius: 20px;
+            color: var(--galore-gray);
+        }
+
+        .no-events i {
+            font-size: 4rem;
+            color: var(--galore-red);
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
             .event-item {
                 flex-direction: column;
                 align-items: flex-start;
+                gap: 10px;
             }
-
+            
             .event-time {
-                margin-bottom: 5px;
+                min-width: auto;
+            }
+            
+            .event-details {
+                padding: 0;
             }
         }
     </style>
@@ -147,104 +244,88 @@
 
 <body>
 
-    <?php include 'navbar.php'; ?>
+    <?php 
+    // Silent include for navbar
+    if (file_exists('navbar.php')) {
+        include 'navbar.php';
+    }
+    ?>
 
     <!-- HERO -->
     <section class="hero">
-        <h1>Galore 2026 Schedule</h1>
-        <p>Check out the day-wise exciting events planned for the festival!</p>
+        <h1 class="display-1 display-md-2 display-sm-3" data-aos="fade-down">
+            <?php echo safeGet($hero_data, 'hero_title', 'Galore 2026 Schedule'); ?>
+        </h1>
+        <p class="lead lead-sm" data-aos="fade-up" data-aos-delay="200">
+            <?php echo safeGet($hero_data, 'hero_subtitle', 'Check out the day-wise exciting events planned for the festival!'); ?>
+        </p>
     </section>
 
     <!-- SCHEDULE SECTION -->
     <section class="schedule-section">
-
-        <!-- Day 1 -->
-        <div class="day-card" data-aos="fade-up">
-            <div class="day-header">Day 1 - 10th Jan 2026</div>
-            <div class="event-list">
-                <div class="event-item">
-                    <div>
-                        <div class="event-time">09:00 AM</div>
-                        <div class="event-name">Opening Ceremony</div>
-                        <div class="event-location">Main Auditorium</div>
-                    </div>
-                </div>
-                <div class="event-item">
-                    <div>
-                        <div class="event-time">10:30 AM</div>
-                        <div class="event-name">Football Tournament</div>
-                        <div class="event-location">Sports Ground</div>
-                    </div>
-                </div>
-                <div class="event-item">
-                    <div>
-                        <div class="event-time">02:00 PM</div>
-                        <div class="event-name">Dance Competition</div>
-                        <div class="event-location">Cultural Hall</div>
-                    </div>
-                </div>
+        
+        <?php if (empty($schedule_by_day)): ?>
+            <div class="no-events" data-aos="fade-up">
+                <i class="bi bi-calendar-x"></i>
+                <h4>No Events Scheduled Yet!</h4>
+                <p class="text-muted">Please check back later for the updated event schedule.</p>
             </div>
-        </div>
+        <?php else: ?>
+            
+            <?php 
+            $delay = 0;
+            foreach ($schedule_by_day as $day_title => $events): 
+                if (empty($events)) continue;
+            ?>
+                <!-- Day Card -->
+                <div class="day-card" data-aos="fade-up" data-aos-delay="<?php echo $delay; ?>">
+                    <div class="day-header">
+                        <?php echo htmlspecialchars($day_title); ?>
+                    </div>
+                    <div class="event-list">
+                        <?php foreach ($events as $event): ?>
+                            <div class="event-item flex-column flex-md-row align-items-start align-items-md-center">
+                                <div class="event-time">
+                                    <?php echo isset($event['event_time']) ? htmlspecialchars($event['event_time']) : 'TBA'; ?>
+                                </div>
+                                <div class="event-details">
+                                    <div class="event-name">
+                                        <?php echo isset($event['event_name']) ? htmlspecialchars($event['event_name']) : 'Event Name'; ?>
+                                    </div>
+                                    <div class="event-location">
+                                        <i class="bi bi-geo-alt-fill" style="color: var(--galore-red);"></i>
+                                        <?php echo isset($event['event_location']) ? htmlspecialchars($event['event_location']) : 'Location TBA'; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php 
+                $delay += 100;
+            endforeach; 
+            ?>
+            
+        <?php endif; ?>
 
-        <!-- Day 2 -->
-        <div class="day-card" data-aos="fade-up" data-aos-delay="100">
-            <div class="day-header">Day 2 - 11th Jan 2026</div>
-            <div class="event-list">
-                <div class="event-item">
-                    <div>
-                        <div class="event-time">09:00 AM</div>
-                        <div class="event-name">Rangoli Competition</div>
-                        <div class="event-location">Open Area</div>
-                    </div>
-                </div>
-                <div class="event-item">
-                    <div>
-                        <div class="event-time">11:00 AM</div>
-                        <div class="event-name">Singing Competition</div>
-                        <div class="event-location">Cultural Hall</div>
-                    </div>
-                </div>
-                <div class="event-item">
-                    <div>
-                        <div class="event-time">03:00 PM</div>
-                        <div class="event-name">Carrom Tournament</div>
-                        <div class="event-location">Indoor Games Hall</div>
-                    </div>
-                </div>
+        <!-- Additional Information -->
+        <?php if (!empty($schedule_by_day)): ?>
+            <div class="text-center mt-5" data-aos="fade-up" data-aos-delay="300">
+                <p class="text-muted">
+                    <i class="bi bi-info-circle"></i> 
+                    Schedule is subject to change. Please check back regularly for updates.
+                </p>
             </div>
-        </div>
-
-        <!-- Day 3 -->
-        <div class="day-card" data-aos="fade-up" data-aos-delay="200">
-            <div class="day-header">Day 3 - 12th Jan 2026</div>
-            <div class="event-list">
-                <div class="event-item">
-                    <div>
-                        <div class="event-time">09:30 AM</div>
-                        <div class="event-name">Cricket Matches</div>
-                        <div class="event-location">Sports Ground</div>
-                    </div>
-                </div>
-                <div class="event-item">
-                    <div>
-                        <div class="event-time">12:30 PM</div>
-                        <div class="event-name">Dance Finale</div>
-                        <div class="event-location">Cultural Hall</div>
-                    </div>
-                </div>
-                <div class="event-item">
-                    <div>
-                        <div class="event-time">05:00 PM</div>
-                        <div class="event-name">Closing Ceremony</div>
-                        <div class="event-location">Main Auditorium</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <?php endif; ?>
 
     </section>
 
-    <?php include 'footer.php'; ?>
+    <?php 
+    // Silent include for footer
+    if (file_exists('footer.php')) {
+        include 'footer.php';
+    }
+    ?>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -252,11 +333,22 @@
     <!-- AOS JS -->
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script>
-        AOS.init({
-            duration: 1200,
-            once: true
-        });
+        if (typeof AOS !== 'undefined') {
+            AOS.init({
+                duration: 1200,
+                once: true,
+                offset: 100
+            });
+        }
     </script>
+
 </body>
 
 </html>
+
+<?php
+// Close connection silently
+if (isset($conn) && $conn) {
+    @mysqli_close($conn);
+}
+?>

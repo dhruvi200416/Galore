@@ -1,3 +1,8 @@
+<?php
+session_start();
+include 'gallery_handler.php';
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -62,6 +67,14 @@
             opacity: 0.95;
         }
 
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            .hero p {
+                font-size: 1rem;
+            }
+        }
 
         /* ===== Gallery Cards ===== */
         .gallery-card {
@@ -71,6 +84,8 @@
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
             cursor: pointer;
             background: #fff;
+            height: 100%;
+            min-height: 260px;
         }
 
         .gallery-card img {
@@ -88,7 +103,7 @@
         .gallery-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(220, 53, 69, 0.7);
+            background: rgba(220, 53, 69, 0.85);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -97,10 +112,27 @@
             font-weight: 600;
             opacity: 0;
             transition: opacity 0.4s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .gallery-card:hover .gallery-overlay {
             opacity: 1;
+        }
+
+        /* Loading and Error States */
+        .no-images {
+            text-align: center;
+            padding: 60px 20px;
+            background: #f8f9fa;
+            border-radius: 16px;
+            color: var(--galore-gray);
+        }
+
+        .no-images i {
+            font-size: 4rem;
+            color: var(--galore-red);
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -109,119 +141,82 @@
 
     <?php include 'navbar.php'; ?>
 
+    <!-- HERO SECTION - DYNAMIC -->
     <section class="hero">
-        <h1>Galore 2026 Gallery</h1>
-        <p>Check out the day-wise exciting events planned for the festival!</p>
+        <h1 class="display-1 display-md-2 display-sm-3" data-aos="fade-down">
+            <?php echo htmlspecialchars($hero_data['hero_title']); ?>
+        </h1>
+        <p class="lead lead-sm" data-aos="fade-up" data-aos-delay="200">
+            <?php echo htmlspecialchars($hero_data['hero_subtitle']); ?>
+        </p>
     </section>
 
+    <!-- GALLERY SECTION - DYNAMIC -->
     <div class="container">
-        <div class="row g-4">
-
-            <div class="col-md-4" data-aos="zoom-in">
-                <div class="gallery-card">
-                    <a href="website/football_galore_evnt.png" class="glightbox" data-gallery="galore-gallery">
-                        <img src="website/football_galore_evnt.png" alt="Football">
-                        <div class="gallery-overlay">Football</div>
-                    </a>
-                </div>
+        <?php if (empty($gallery_images)): ?>
+            <!-- No images found -->
+            <div class="no-images" data-aos="fade-up">
+                <i class="bi bi-images"></i>
+                <h3>No Gallery Images Found</h3>
+                <p class="text-muted">Please check back later for updated gallery content.</p>
             </div>
-
-            <div class="col-md-4" data-aos="zoom-in" data-aos-delay="100">
-                <div class="gallery-card">
-                    <a href="website/dance_galore_event.jpg" class="glightbox" data-gallery="galore-gallery">
-                        <img src="website/dance_galore_event.jpg" alt="Dance">
-                        <div class="gallery-overlay">Dance</div>
-                    </a>
-                </div>
+        <?php else: ?>
+            <!-- Display gallery images -->
+            <div class="row g-4">
+                <?php 
+                $delay = 0;
+                foreach ($gallery_images as $index => $image): 
+                    // Calculate delay for animation (0, 100, 200, then repeat)
+                    $current_delay = ($index % 3) * 100;
+                ?>
+                    <div class="col-12 col-sm-6 col-md-4" data-aos="zoom-in" data-aos-delay="<?php echo $current_delay; ?>">
+                        <div class="gallery-card">
+                            <a href="<?php echo htmlspecialchars($image['image']); ?>" class="glightbox" data-gallery="galore-gallery">
+                                <img src="<?php echo htmlspecialchars($image['image']); ?>" 
+                                     alt="<?php echo htmlspecialchars($image['alt_text']); ?>" 
+                                     class="img-fluid"
+                                     loading="lazy">
+                                <div class="gallery-overlay"><?php echo htmlspecialchars($image['overlay_text']); ?></div>
+                            </a>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
-
-            <div class="col-md-4" data-aos="zoom-in" data-aos-delay="200">
-                <div class="gallery-card">
-                    <a href="website/music_galore_event.jpg" class="glightbox" data-gallery="galore-gallery">
-                        <img src="website/music_galore_event.jpg" alt="Music">
-                        <div class="gallery-overlay">Music</div>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-md-4" data-aos="zoom-in">
-                <div class="gallery-card">
-                    <a href="website/rangoli_galore_event.jpg" class="glightbox" data-gallery="galore-gallery">
-                        <img src="website/rangoli_galore_event.jpg" alt="Rangoli">
-                        <div class="gallery-overlay">Rangoli</div>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-md-4" data-aos="zoom-in" data-aos-delay="100">
-                <div class="gallery-card">
-                    <a href="website/carrom_galore_event.png" class="glightbox" data-gallery="galore-gallery">
-                        <img src="website/carrom_galore_event.png" alt="Carrom">
-                        <div class="gallery-overlay">Carrom</div>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-md-4" data-aos="zoom-in" data-aos-delay="200">
-                <div class="gallery-card">
-                    <a href="website/cricket_galore_event.png" class="glightbox" data-gallery="galore-gallery">
-                        <img src="website/cricket_galore_event.png" alt="Cricket">
-                        <div class="gallery-overlay">Cricket</div>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-md-4" data-aos="zoom-in">
-                <div class="gallery-card">
-                    <a href="website/gallery3.png" class="glightbox" data-gallery="galore-gallery">
-                        <img src="website/gallery3.png" alt="Gallery Image 3">
-                        <div class="gallery-overlay">View Event</div>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-md-4" data-aos="zoom-in" data-aos-delay="100">
-                <div class="gallery-card">
-                    <a href="website/gallery2.png" class="glightbox" data-gallery="galore-gallery">
-                        <img src="website/gallery2.png" alt="Gallery Image 2">
-                        <div class="gallery-overlay">View Event</div>
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-md-4" data-aos="zoom-in" data-aos-delay="200">
-                <div class="gallery-card">
-                    <a href="website/gallery1.png" class="glightbox" data-gallery="galore-gallery">
-                        <img src="website/gallery1.png" alt="Gallery Image 1">
-                        <div class="gallery-overlay">View Event</div>
-                    </a>
-                </div>
-            </div>
-
-        </div>
+        <?php endif; ?>
     </div>
 
     <?php include 'footer.php'; ?>
 
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- AOS JS -->
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    
+    <!-- GLightbox JS -->
     <script src="https://cdn.jsdelivr.net/gh/mcstudios/glightbox/dist/js/glightbox.min.js"></script>
 
     <script>
+        // Initialize AOS
         AOS.init({
             duration: 1200,
-            once: true
+            once: true,
+            offset: 100
         });
 
-        // This script handles the smooth zoom pop-in
+        // Initialize GLightbox
         const lightbox = GLightbox({
             selector: '.glightbox',
             touchNavigation: true,
             loop: true,
             zoomable: true,
             draggable: true,
-            openEffect: 'zoom', // Smooth zoom in
-            closeEffect: 'zoom' // Smooth zoom out
+            openEffect: 'zoom',
+            closeEffect: 'zoom',
+            slideEffect: 'slide'
         });
     </script>
 

@@ -53,17 +53,6 @@
       border-radius: 10px;
     }
 
-    .about-grid {
-      display: flex;
-      gap: 50px;
-      align-items: center;
-      margin-bottom: 90px;
-    }
-
-    .about-grid.reverse {
-      flex-direction: row-reverse;
-    }
-
     .about-image img {
       width: 100%;
       border-radius: 16px;
@@ -89,12 +78,11 @@
       line-height: 1.7;
     }
 
-
-
     /* ================= CAROUSEL ================= */
     #fastCarousel {
+      margin-top: 10%;
       width: 100%;
-      height: 70vh; /* half screen height */
+      height: 70vh;
       overflow: hidden;
     }
 
@@ -109,10 +97,6 @@
       object-fit: cover;
       transition: transform 1s ease;
     }
-
-    /* #fastCarousel .carousel-item.active img {
-      transform: scale(1.05);
-    } */
 
     /* ================= COORDINATOR AUTO SCROLL ================= */
     .coordinator-scroll-wrapper {
@@ -147,6 +131,23 @@
       max-width: 260px;
       flex-shrink: 0;
     }
+
+    .download-btn {
+      display: inline-block;
+      padding: 10px 25px;
+      background: linear-gradient(135deg, #ff4d5a, var(--galore-red));
+      color: white;
+      text-decoration: none;
+      border-radius: 25px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .download-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(220, 53, 69, 0.3);
+      color: white;
+    }
   </style>
 </head>
 
@@ -154,211 +155,229 @@
 
   <?php include 'navbar.php'; ?>
 
-  <!-- ================= CAROUSEL ================= -->
-  <div class="container-fluid p-0">
-    <div id="fastCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="3000"
-      data-bs-pause="false">
+  <?php
+  // Database connection
+  $con = mysqli_connect("localhost", "root", "", "galore2026");
 
-      <div class="carousel-indicators">
-        <button type="button" data-bs-target="#fastCarousel" data-bs-slide-to="0" class="active"></button>
-        <button type="button" data-bs-target="#fastCarousel" data-bs-slide-to="1"></button>
-        <button type="button" data-bs-target="#fastCarousel" data-bs-slide-to="2"></button>
-        <button type="button" data-bs-target="#fastCarousel" data-bs-slide-to="3"></button>
-        <button type="button" data-bs-target="#fastCarousel" data-bs-slide-to="4"></button>
-        <button type="button" data-bs-target="#fastCarousel" data-bs-slide-to="5"></button>
+  if (!$con) {
+    die("Connection failed: " . mysqli_connect_error());
+  }
+
+  // Fetch active carousel slides
+  $carousel_query = "SELECT id, image, title, alt_text FROM carousel_slide 
+                   WHERE status = 'Active' 
+                   ORDER BY id ASC";
+  $carousel_result = mysqli_query($con, $carousel_query);
+  $slides = [];
+  while ($row = mysqli_fetch_assoc($carousel_result)) {
+    $slides[] = $row;
+  }
+  $slide_count = count($slides);
+
+// Fetch active home info from database ONLY
+$home_query = "SELECT heading, sub_heading FROM home_info 
+               WHERE status = 'Active' 
+               ORDER BY id ASC LIMIT 1";
+$home_result = mysqli_query($con, $home_query);
+$home_data = mysqli_fetch_assoc($home_result);
+?>
+
+  <!-- ================= DYNAMIC CAROUSEL ================= -->
+  <br><br><br><br><br>
+  <?php if ($slide_count > 0): ?>
+    <div class="container-fluid p-0">
+      <div id="galoreCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="3000">
+
+        <!-- Indicators -->
+        <?php if ($slide_count > 1): ?>
+          <div class="carousel-indicators">
+            <?php for ($i = 0; $i < $slide_count; $i++): ?>
+              <button type="button"
+                data-bs-target="#galoreCarousel"
+                data-bs-slide-to="<?php echo $i; ?>"
+                <?php echo $i === 0 ? 'class="active" aria-current="true"' : ''; ?>
+                aria-label="Slide <?php echo $i + 1; ?>">
+              </button>
+            <?php endfor; ?>
+          </div>
+        <?php endif; ?>
+
+        <!-- Slides -->
+        <div class="carousel-inner">
+          <?php foreach ($slides as $index => $slide): ?>
+            <div class="carousel-item <?php echo $index === 0 ? 'active' : ''; ?>">
+              <img src="<?php echo htmlspecialchars($slide['image']); ?>"
+                class="d-block w-100"
+                alt="<?php echo htmlspecialchars($slide['alt_text'] ?: $slide['title']); ?>"
+                style="height: 600px; object-fit: cover;">
+
+              <!-- Caption -->
+              <?php if (!empty($slide['title'])): ?>
+                <div class="carousel-caption d-none d-md-block">
+                  <div class="bg-dark bg-opacity-50 p-4 rounded">
+                    <h3 class="text-white"><?php echo htmlspecialchars($slide['title']); ?></h3>
+                  </div>
+                </div>
+              <?php endif; ?>
+            </div>
+          <?php endforeach; ?>
+        </div>
+
+        <!-- Controls -->
+        <?php if ($slide_count > 1): ?>
+          <button class="carousel-control-prev" type="button" data-bs-target="#galoreCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#galoreCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+        <?php endif; ?>
       </div>
-
-      <div class="carousel-inner">
-        <div class="carousel-item active"><img src="website/drowing_galore_event.jpg" alt="Drowing"></div>
-        <div class="carousel-item"><img src="website/dance_galore_event.jpg" alt="Dance"></div>
-        <div class="carousel-item"><img src="website/football_galore_evnt.png" alt="Football"></div>
-        <div class="carousel-item"><img src="website/music_galore_event.jpg" alt="Singing"></div>
-        <div class="carousel-item"><img src="website/carrom_galore_event.png" alt="Carrom"></div>
-        <div class="carousel-item"><img src="website/rangoli_galore_event.jpg" alt="Rangoli"></div>
-      </div>
-
-      <button class="carousel-control-prev" type="button" data-bs-target="#fastCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon"></span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#fastCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon"></span>
-      </button>
     </div>
-  </div><br>
+    <br>
 
-  <!-- ================= ABOUT SECTION ================= -->
-  <section class="about-section">
-    <div class="container">
-
-      <div class="header-content" data-aos="fade-down">
-        <h2>Galore</h2>
-        <p>Sports and Cultural Festival of RK University</p>
-        <div class="underline"></div>
+  <?php else: ?>
+    <!-- Fallback when no active slides -->
+    <!-- <div class="container my-5">
+      <div class="alert alert-info text-center">
+        <h4><i class="fas fa-images me-2"></i>Carousel Coming Soon!</h4>
+        <p>Check back later for exciting Galore 2026 event images.</p>
       </div>
+    </div> -->
+  <?php endif; ?>
 
-      <!-- FOOTBALL -->
-      <div class="about-grid" data-aos="fade-right">
-        <div class="about-image" data-aos="zoom-in">
-          <img src="website/football_galore_evnt.png" alt="Football">
-        </div>
-        <div class="about-text" data-aos="fade-left">
-          <h3>Most Popular <span>Football</span></h3>
-          <p>Football is a global phenomenon that unites cultures, emotions, and dreams. Teams demonstrate strategy,
-            teamwork, and skill, while players showcase agility, endurance, and creativity. Football is more than a
-            sport; it's a celebration of spirit, dedication, and joy of competition.</p>
-          <a href="sports-indoor.php" class="download-btn" data-aos="flip-up">Football Event</a>
-        </div>
-      </div>
 
-      <!-- RANGOLI -->
-      <div class="about-grid reverse" data-aos="fade-left">
-        <div class="about-image" data-aos="zoom-in">
-          <img src="website/rangoli_galore_event.jpg" alt="Rangoli">
-        </div>
-        <div class="about-text" data-aos="fade-right">
-          <h3>Creative <span>Rangoli</span></h3>
-          <p>Rangoli is a traditional art form that uses colors, patterns, and creativity. Participants explore intricate
-            designs inspired by culture and festivals. Rangoli encourages focus, patience, and artistic expression.</p>
-          <a href="sports-indoor.php" class="download-btn" data-aos="flip-up">Rangoli Event</a>
-        </div>
-      </div>
+<?php
+// Fetch active home events
+$home_query = "SELECT heading, sub_heading FROM home_info 
+WHERE status='Active' LIMIT 1";
 
-      <!-- DANCE -->
-      <div class="about-grid" data-aos="fade-right">
-        <div class="about-image" data-aos="zoom-in">
-          <img src="website/dance_galore_event.jpg" alt="Dance">
-        </div>
-        <div class="about-text" data-aos="fade-left">
-          <h3>Energetic <span>Dance</span></h3>
-          <p>Dance is a powerful form of expression combining rhythm, movement, and emotion. Performers showcase cultural
-            traditions and creativity. Competitions celebrate talent, coordination, and joy.</p>
-          <a href="sports-indoor.php" class="download-btn" data-aos="flip-up">Dance Event</a>
-        </div>
-      </div>
+$home_result = mysqli_query($con,$home_query);
+$home_data = mysqli_fetch_assoc($home_result);
 
-      <!-- SINGING -->
-      <div class="about-grid reverse" data-aos="fade-left">
-        <div class="about-image" data-aos="zoom-in">
-          <img src="website/music_galore_event.jpg" alt="Singing">
-        </div>
-        <div class="about-text" data-aos="fade-right">
-          <h3>Melodious <span>Singing</span></h3>
-          <p>Singing connects hearts through melody, pitch, and rhythm. Participants perform solos or group numbers,
-            covering classical, contemporary, or regional music. Singing competitions encourage confidence, creativity, and
-            a love for music.</p>
-          <a href="sports-indoor.php" class="download-btn" data-aos="flip-up">Singing Event</a>
-        </div>
-      </div>
 
-      <!-- CARROM -->
-      <div class="about-grid" data-aos="fade-right">
-        <div class="about-image" data-aos="zoom-in">
-          <img src="website/carrom_galore_event.png" alt="Carrom">
-        </div>
-        <div class="about-text" data-aos="fade-left">
-          <h3>Strategic <span>Carrom</span></h3>
-          <p>Carrom is a game of precision, strategy, and concentration. Players combine skill and focus to pocket coins
-            and win. It encourages patience, logical thinking, and mental agility.</p>
-          <a href="sports-indoor.php" class="download-btn" data-aos="flip-up">Carrom Event</a>
-        </div>
-      </div>
+// ✅ ADD THIS QUERY
+$events_query = "SELECT * FROM home_events WHERE status='Active' ORDER BY id ASC";
+$events_result = mysqli_query($con,$events_query);
 
-      <!-- CRICKET -->
-      <div class="about-grid reverse" data-aos="fade-left">
-        <div class="about-image" data-aos="zoom-in">
-          <img src="website/cricket_galore_event.png" alt="Cricket">
-        </div>
-        <div class="about-text" data-aos="fade-right">
-          <h3>Exciting <span>Cricket</span></h3>
-          <p>Cricket combines skill, strategy, and teamwork. Matches are filled with suspense, outstanding plays, and
-            moments of glory. Cricket inspires sportsmanship, excitement, and passion among students.</p>
-          <a href="sports-indoor.php" class="download-btn" data-aos="flip-up">Cricket Event</a>
-        </div>
-      </div>
+if(!$events_result){
+die("Query Failed: ".mysqli_error($con));
+}
+?>
+<!-- ================= ABOUT SECTION ================= -->
+<section class="about-section">
+<div class="container">
 
-    </div>
-  </section>
+<!-- Dynamic Header -->
+<?php if ($home_data): ?>
+<div class="header-content" data-aos="fade-down">
+<h2 class="h1 h2-sm"><?php echo htmlspecialchars($home_data['heading']); ?></h2>
+<p class="lead"><?php echo htmlspecialchars($home_data['sub_heading']); ?></p>
+<div class="underline"></div>
+</div>
+<?php endif; ?>
+
+
+<?php
+$counter = 0;
+
+while($event = mysqli_fetch_assoc($events_result)):
+
+$reverse = ($counter % 2 != 0) ? "flex-lg-row-reverse" : "";
+?>
+
+<div class="row align-items-center g-5 mb-5 <?php echo $reverse; ?>" data-aos="fade-up">
+
+<!-- IMAGE -->
+<div class="col-lg-6" data-aos="zoom-in">
+<div class="about-image">
+<img src="<?php echo htmlspecialchars($event['image']); ?>" 
+alt="<?php echo htmlspecialchars($event['heading']); ?>" 
+class="img-fluid">
+</div>
+</div>
+
+<!-- TEXT -->
+<div class="col-lg-6" data-aos="fade-left">
+<div class="about-text">
+
+<h3 class="h3 h4-sm">
+<?php echo htmlspecialchars($event['heading']); ?>
+</h3>
+
+<p class="mb-4">
+<?php echo htmlspecialchars($event['description']); ?>
+</p>
+
+<a href="<?php echo htmlspecialchars($event['button_link']); ?>" 
+class="download-btn" 
+data-aos="flip-up">
+
+<?php echo htmlspecialchars($event['button_text']); ?>
+
+</a>
+
+</div>
+</div>
+
+</div>
+
+<?php 
+$counter++;
+endwhile; 
+?>
+
+</div>
+</section>
 
   <!-- ================= COORDINATOR SECTION ================= -->
-  <section class="coordinator-section">
-    <div class="container" data-aos="fade-up">
+   <?php
+// Fetch Active Coordinators
+$coordinator_query = "SELECT image, name, role, phone 
+                      FROM home_coordinators 
+                      WHERE status='Active' 
+                      ORDER BY id ASC";
 
-      <div class="text-center mb-4">
-        <h3>Event Coordinators</h3>
-        <div class="underline"></div>
-      </div>
+$coordinator_result = mysqli_query($con, $coordinator_query);
 
-      <div class="coordinator-scroll-wrapper">
-        <div class="coordinator-scroll track">
+if(!$coordinator_result){
+    die("Coordinator Query Failed: " . mysqli_error($con));
+}
+?>
+ <div class="coordinator-scroll-wrapper">
+<div class="coordinator-scroll track">
 
-          <!-- Coordinator Cards -->
-          <div class="card coordinator-card shadow">
-            <img src="website/rahul.png" class="card-img-top" alt="Rahul">
-            <div class="card-body text-center">
-              <h5>Rahul Sharma</h5>
-              <p class="mb-1">Football Coordinator</p>
-              <small class="text-muted">📞 +91 98765 43210</small>
-            </div>
-          </div>
+<?php while($coordinator = mysqli_fetch_assoc($coordinator_result)) { ?>
 
-          <div class="card coordinator-card shadow">
-            <img src="website/priya.png" class="card-img-top" alt="Priya">
-            <div class="card-body text-center">
-              <h5>Priya Patel</h5>
-              <p class="mb-1">Cultural Coordinator</p>
-              <small class="text-muted">📞 +91 91234 56789</small>
-            </div>
-          </div>
+<div class="card coordinator-card shadow-sm">
 
-          <div class="card coordinator-card shadow">
-            <img src="website/amit.png" class="card-img-top" alt="Amit">
-            <div class="card-body text-center">
-              <h5>Amit Verma</h5>
-              <p class="mb-1">Sports Coordinator</p>
-              <small class="text-muted">📞 +91 99887 66554</small>
-            </div>
-          </div>
+<img src="<?php echo htmlspecialchars($coordinator['image']); ?>" 
+class="card-img-top" 
+alt="<?php echo htmlspecialchars($coordinator['name']); ?>">
 
-          <div class="card coordinator-card shadow">
-            <img src="website/neha.png" class="card-img-top" alt="Neha">
-            <div class="card-body text-center">
-              <h5>Neha Joshi</h5>
-              <p class="mb-1">Dance Coordinator</p>
-              <small class="text-muted">📞 +91 90123 45678</small>
-            </div>
-          </div>
+<div class="card-body text-center">
 
-          <div class="card coordinator-card shadow">
-            <img src="website/rohit.png" class="card-img-top" alt="Rohit">
-            <div class="card-body text-center">
-              <h5>Rohit Mehta</h5>
-              <p class="mb-1">Music Coordinator</p>
-              <small class="text-muted">📞 +91 88990 11223</small>
-            </div>
-          </div>
+<h5 class="card-title">
+<?php echo htmlspecialchars($coordinator['name']); ?>
+</h5>
 
-          <div class="card coordinator-card shadow">
-            <img src="website/megha.png" class="card-img-top" alt="Drawing Coordinator">
-            <div class="card-body text-center">
-              <h5>Megha Parmar</h5>
-              <p class="mb-1">Drawing Coordinator</p>
-              <small class="text-muted">📞 +91 90765 33445</small>
-            </div>
-          </div>
+<p class="card-text mb-1">
+<?php echo htmlspecialchars($coordinator['role']); ?>
+</p>
 
-          <div class="card coordinator-card shadow">
-            <img src="website/sapana.png" class="card-img-top" alt="Carrom Coordinator">
-            <div class="card-body text-center">
-              <h5>Sapana Patel</h5>
-              <p class="mb-1">Carrom Coordinator</p>
-              <small class="text-muted">📞 +91 99876 54321</small>
-            </div>
-          </div>
+<small class="text-muted">
+📞 <?php echo htmlspecialchars($coordinator['phone']); ?>
+</small>
 
-        </div>
-      </div>
-    </div>
-  </section>
+</div>
+</div>
+
+<?php } ?>
+
+</div>
+</div>
 
   <?php include 'footer.php'; ?>
 
@@ -373,6 +392,10 @@
       once: true
     });
   </script>
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 </body>
 

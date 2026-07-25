@@ -1,3 +1,8 @@
+<?php
+// Include the registration handler 
+include 'registration_handler.php';
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,6 +10,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registration | RKU Galore</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <!-- Add jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
   <style>
     :root {
@@ -22,41 +36,7 @@
       min-height: 100vh;
     }
 
-    /* ===== HERO (SAME AS RULES PAGE) ===== */
-    .hero {
-      background: linear-gradient(135deg, #dc3545, #7a1c25);
-      color: #fff;
-      text-align: center;
-      padding: 160px 20px 100px;
-      position: relative;
-      overflow: hidden;
-    }
 
-    .hero::after {
-      content: "";
-      position: absolute;
-      bottom: -60px;
-      left: 0;
-      width: 100%;
-      height: 120px;
-      background: #fff;
-      border-radius: 50% 50% 0 0;
-    }
-
-    .hero h1 {
-      font-size: 3.5rem;
-      font-weight: 900;
-      letter-spacing: 2px;
-      margin-bottom: 12px;
-    }
-
-    .hero p {
-      font-size: 1.2rem;
-      opacity: 0.95;
-    }
-
-
-    /* ===== REGISTRATION CARD ===== */
     .galore-login-wrapper {
       display: flex;
       justify-content: center;
@@ -106,21 +86,28 @@
       margin: 0 auto 35px;
     }
 
+    .alert {
+      border-radius: 10px;
+      margin-bottom: 20px;
+      padding: 15px 20px;
+    }
+
+    .alert-success {
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+      color: #155724;
+    }
+
+    .alert-danger {
+      background-color: #f8d7da;
+      border-color: #f5c6cb;
+      color: #721c24;
+    }
+
     form {
       display: grid;
       grid-template-columns: 1fr;
       gap: 18px;
-    }
-
-    @media (min-width: 768px) {
-      form {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .galore-login-btn,
-      .galore-login-footer {
-        grid-column: span 2;
-      }
     }
 
     .galore-input-group {
@@ -150,6 +137,14 @@
       box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.15);
     }
 
+    .galore-login-input.is-valid {
+      border-color: #28a745;
+    }
+
+    .galore-login-input.is-invalid {
+      border-color: var(--galore-red);
+    }
+
     .galore-email-note {
       font-size: 0.75rem;
       color: var(--galore-gray);
@@ -167,6 +162,7 @@
       font-weight: bold;
       cursor: pointer;
       margin-top: 10px;
+      transition: all 0.3s ease;
     }
 
     .galore-login-btn:hover {
@@ -184,15 +180,23 @@
       border-top: 1px solid rgba(220, 53, 69, 0.25);
     }
 
-    .error {
-      color: #dc3545;
-      font-size: 0.75rem;
-      margin-top: 4px;
-      display: none;
+    .phone-input-container {
+      position: relative;
+      display: flex;
+      align-items: center;
     }
 
-    .galore-login-input.error-border {
-      border-color: #dc3545;
+    .country-code {
+      position: absolute;
+      left: 15px;
+      color: var(--galore-gray);
+      font-weight: 600;
+      font-size: 0.95rem;
+      pointer-events: none;
+    }
+
+    .phone-input {
+      padding-left: 70px !important;
     }
   </style>
 </head>
@@ -202,194 +206,214 @@
   <?php include 'navbar.php'; ?>
 
   <!-- ===== HERO ===== -->
-  <!-- ===== HERO ===== -->
   <section class="hero">
-    <h1>Galore 2026 Registration</h1>
-    <p>Register now to participate in exciting Galore events</p>
+    <h1 class="display-1 display-md-2 display-sm-3">Galore 2026 Registration</h1>
+    <p class="lead lead-sm">Register now to participate in exciting Galore events</p>
   </section>
 
-
-  <!-- ===== FORM ===== -->
+  <!-- ===== REGISTRATION FORM ===== -->
   <div class="galore-login-wrapper">
     <div class="galore-login-card">
 
-      <h2 class="galore-login-title">🎉 Student Registration</h2>
+      <h2 class="galore-login-title h2 h3-sm">🎉 Student Registration</h2>
       <div class="galore-login-deadline">Last Date: 12 January 2026</div>
 
-      <form id="registrationForm" action="registration_process.php" method="POST" enctype="multipart/form-data">
-
-        <div class="galore-input-group">
-          <label class="galore-login-label">Enrollment No</label>
-          <input type="text" name="enrollment_no"
-            class="galore-login-input"
-            placeholder="Enter your enrollment number">
-          <small class="error"></small>
+      <!-- Success/Error Messages -->
+      <?php if (!empty($success_message)): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <i class="fas fa-check-circle me-2"></i> <?php echo $success_message; ?>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+      <?php endif; ?>
 
-        <div class="galore-input-group">
-          <label class="galore-login-label">Full Name</label>
-          <input type="text" name="name"
-            class="galore-login-input"
-            placeholder="Enter your full name">
-          <small class="error"></small>
+      <?php if (!empty($error_message)): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="fas fa-exclamation-circle me-2"></i> <?php echo $error_message; ?>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+      <?php endif; ?>
 
-        <div class="galore-input-group">
-          <label class="galore-login-label">Branch</label>
-          <input type="text" name="branch"
-            class="galore-login-input"
-            placeholder="e.g. Computer Engineering">
-          <small class="error"></small>
+      <!-- ONLY CHANGE: Form action changed from login.php to registration.php -->
+      <form id="registrationForm" action="registration.php" method="POST" enctype="multipart/form-data">
+        <div class="container-fluid p-0">
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <div class="galore-input-group">
+                <label class="galore-login-label">Enrollment No *</label>
+                <input type="text" name="enrollment_no"
+                  class="galore-login-input"
+                  placeholder="Enter your enrollment number"
+                  value="<?php echo isset($_POST['enrollment_no']) ? htmlspecialchars($_POST['enrollment_no']) : ''; ?>"
+                  required>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="galore-input-group">
+                <label class="galore-login-label">First Name *</label>
+                <input type="text" name="firstName"
+                  class="galore-login-input"
+                  placeholder="Enter your first name"
+                  value="<?php echo isset($_POST['firstName']) ? htmlspecialchars($_POST['firstName']) : ''; ?>"
+                  required>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="galore-input-group">
+                <label class="galore-login-label">Last Name</label>
+                <input type="text" name="lastName"
+                  class="galore-login-input"
+                  placeholder="Enter your last name (optional)"
+                  value="<?php echo isset($_POST['lastName']) ? htmlspecialchars($_POST['lastName']) : ''; ?>">
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="galore-input-group">
+                <label class="galore-login-label">Branch *</label>
+                <input type="text" name="branch"
+                  class="galore-login-input"
+                  placeholder="e.g. Computer Engineering"
+                  value="<?php echo isset($_POST['branch']) ? htmlspecialchars($_POST['branch']) : ''; ?>"
+                  required>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="galore-input-group">
+                <label class="galore-login-label">Semester *</label>
+                <select name="semester" class="galore-login-input" required>
+                  <option value="">Select Semester</option>
+                  <?php for ($i = 1; $i <= 8; $i++): ?>
+                    <option value="<?php echo $i; ?>" <?php echo (isset($_POST['semester']) && $_POST['semester'] == $i) ? 'selected' : ''; ?>>
+                      Semester <?php echo $i; ?>
+                    </option>
+                  <?php endfor; ?>
+                </select>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="galore-input-group">
+                <label class="galore-login-label">Gender *</label>
+                <select name="gender" class="galore-login-input" required>
+                  <option value="">Select Gender</option>
+                  <option value="Male" <?php echo (isset($_POST['gender']) && $_POST['gender'] == 'Male') ? 'selected' : ''; ?>>Male</option>
+                  <option value="Female" <?php echo (isset($_POST['gender']) && $_POST['gender'] == 'Female') ? 'selected' : ''; ?>>Female</option>
+                  <option value="Other" <?php echo (isset($_POST['gender']) && $_POST['gender'] == 'Other') ? 'selected' : ''; ?>>Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="galore-input-group">
+                <label class="galore-login-label">School *</label>
+                <input type="text" name="school"
+                  class="galore-login-input"
+                  placeholder="e.g. SOE, SOM"
+                  value="<?php echo isset($_POST['school']) ? htmlspecialchars($_POST['school']) : ''; ?>"
+                  required>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="galore-input-group">
+                <label class="galore-login-label">Phone Number *</label>
+                <div class="phone-input-container">
+                  <span class="country-code">+91</span>
+                  <input type="tel" name="phone"
+                    class="galore-login-input phone-input"
+                    placeholder="9876543210"
+                    maxlength="10"
+                    pattern="[0-9]{10}"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : ''; ?>"
+                    required>
+                </div>
+                <p class="galore-email-note">Enter 10-digit mobile number (India).</p>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="galore-input-group">
+                <label class="galore-login-label">RKU Email *</label>
+                <input type="email" name="email"
+                  class="galore-login-input"
+                  placeholder="yourname@rku.ac.in"
+                  value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>"
+                  required>
+                <p class="galore-email-note">All updates will be sent to this email.</p>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="galore-input-group">
+                <label class="galore-login-label">Password *</label>
+                <input type="password" name="password"
+                  class="galore-login-input"
+                  placeholder="Enter password"
+                  minlength="6"
+                  required>
+                <p class="galore-email-note">Minimum 6 characters</p>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="galore-input-group">
+                <label class="galore-login-label">Confirm Password *</label>
+                <input type="password" name="confirm_password"
+                  class="galore-login-input"
+                  placeholder="Confirm password"
+                  minlength="6"
+                  required>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="galore-input-group">
+                <label class="galore-login-label">Role *</label>
+                <select name="role" class="galore-login-input" required>
+                  <option value="">Select Role</option>
+                  <option value="Participant" <?php echo (isset($_POST['role']) && $_POST['role'] == 'Participant') ? 'selected' : ''; ?>>Participant</option>
+                  <option value="Coordinator" <?php echo (isset($_POST['role']) && $_POST['role'] == 'Coordinator') ? 'selected' : ''; ?>>Coordinator</option>
+                  <option value="Judge" <?php echo (isset($_POST['role']) && $_POST['role'] == 'Co-codinator') ? 'selected' : ''; ?>>Co-codinator</option>
+                  <option value="Admin" <?php echo (isset($_POST['role']) && $_POST['role'] == 'Admin') ? 'selected' : ''; ?>>Admin</option>
+                </select>
+                <p class="galore-email-note">Select your role in Galore 2026.</p>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="galore-input-group">
+                <label class="galore-login-label">Profile Picture</label>
+                <input type="file" name="profile_pic"
+                  class="galore-login-input"
+                  accept="image/*">
+                <p class="galore-email-note">Upload a clear profile photo. Max size: 2MB (JPG, PNG, GIF only).</p>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <button type="submit" name="reg_btn" class="galore-login-btn w-100">
+                <i class="fas fa-user-plus me-2"></i>Complete Registration
+              </button>
+            </div>
+          </div>
         </div>
-
-        <div class="galore-input-group">
-          <label class="galore-login-label">Semester</label>
-          <select name="semester" class="galore-login-input">
-            <option value="">Select Semester</option>
-            <?php for ($i = 1; $i <= 8; $i++) echo "<option value='$i'>Semester $i</option>"; ?>
-          </select>
-          <small class="error"></small>
-        </div>
-
-        <div class="galore-input-group">
-          <label class="galore-login-label">Gender</label>
-          <select name="gender" class="galore-login-input">
-            <option value="">Select Gender</option>
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
-          </select>
-          <small class="error"></small>
-        </div>
-
-        <div class="galore-input-group">
-          <label class="galore-login-label">School</label>
-          <input type="text" name="school"
-            class="galore-login-input"
-            placeholder="e.g. SOE, SOM">
-          <small class="error"></small>
-        </div>
-
-        <div class="galore-input-group">
-          <label class="galore-login-label">RKU Email</label>
-          <input type="email" name="rku_email"
-            class="galore-login-input"
-            placeholder="yourname@rku.ac.in">
-          <small class="error"></small>
-          <p class="galore-email-note">All updates will be sent to this email.</p>
-        </div>
-
-        <div class="galore-input-group">
-          <label class="galore-login-label">Profile Picture</label>
-          <input type="file" name="profile_pic" class="galore-login-input" accept="image/*">
-          <small class="error"></small>
-          <p class="galore-email-note">Upload a clear profile photo (optional).</p>
-        </div>
-
-
-        <button type="submit" class="galore-login-btn">
-          Complete Registration
-        </button>
-
       </form>
 
       <div class="galore-login-footer">
-        Registration is mandatory for participation in Galore events.
+        * Required fields - Registration is mandatory for participation in Galore events.
       </div>
 
     </div>
   </div>
 
-  <script>
-    $(document).ready(function() {
-
-      function showError(input, message) {
-        const $error = $(input).next(".error");
-        $error.text(message).show();
-        $(input).addClass("error-border");
-      }
-
-      function clearError(input) {
-        const $error = $(input).next(".error");
-        $error.text("").hide();
-        $(input).removeClass("error-border");
-      }
-
-      $("#registrationForm").on("submit", function(e) {
-        e.preventDefault();
-        let valid = true;
-
-        const enrollment = $('[name="enrollment_no"]');
-        const name = $('[name="name"]');
-        const branch = $('[name="branch"]');
-        const semester = $('[name="semester"]');
-        const gender = $('[name="gender"]');
-        const school = $('[name="school"]');
-        const email = $('[name="rku_email"]');
-        const profilePic = $('[name="profile_pic"]')[0];
-
-        // Enrollment
-        if ($.trim(enrollment.val()).length < 6) {
-          showError(enrollment, "Enrollment number must be at least 6 characters");
-          valid = false;
-        } else clearError(enrollment);
-
-        // Name
-        if (!/^[a-zA-Z\s]+$/.test($.trim(name.val()))) {
-          showError(name, "Name should contain only letters");
-          valid = false;
-        } else clearError(name);
-
-        // Branch
-        if ($.trim(branch.val()) === "") {
-          showError(branch, "Branch is required");
-          valid = false;
-        } else clearError(branch);
-
-        // Semester
-        if (semester.val() === "") {
-          showError(semester, "Please select semester");
-          valid = false;
-        } else clearError(semester);
-
-        // Gender
-        if (gender.val() === "") {
-          showError(gender, "Please select gender");
-          valid = false;
-        } else clearError(gender);
-
-        // School
-        if ($.trim(school.val()) === "") {
-          showError(school, "School is required");
-          valid = false;
-        } else clearError(school);
-
-        // Email
-        if (!email.val().endsWith("@rku.ac.in")) {
-          showError(email, "Use your official RKU email");
-          valid = false;
-        } else clearError(email);
-
-        // Profile Picture (optional)
-        if (profilePic.files.length > 0) {
-          const file = profilePic.files[0];
-          const allowed = ["image/jpeg", "image/png", "image/jpg"];
-
-          if (!allowed.includes(file.type)) {
-            showError(profilePic, "Only JPG or PNG allowed");
-            valid = false;
-          } else clearError(profilePic);
-        }
-
-        if (valid) {
-          this.submit(); // submit form if everything is valid
-        }
-      });
-
-    });
-  </script>
-
   <?php include 'footer.php'; ?>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 
